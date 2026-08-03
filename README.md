@@ -452,13 +452,13 @@ What it does:
 - Installs **Xcode Command Line Tools** and **Homebrew** when missing.
 - Installs core tools: mkvtoolnix, ffmpeg, flac, x264, x265, SvtAv1EncApp, fdkaac, VapourSynth, libass, mpv.
 - Builds `hdr10plus_tool` and `dovi_tool` from official upstream sources with cargo (not packaged by Homebrew).
+- Builds the VapourSynth plugins the default Encode pipeline needs (L-SMASH-Works, fmtconv, mvsfunc/muvsfunc, nlm_ispc, placebo, eedi2, rgvs, descale) from source into `~/plugins`.
 - Creates a virtual environment and installs the Python packages.
 - Verifies every tool against the macOS paths defined in `src/core/settings.py`.
 
 **macOS limitations**
 
 - `tsMuxeR`, `truehdd` and `vsedit` have no macOS builds. Tasks that require them report an explicit error.
-- VapourSynth plugins (descale, VapourSynth scripts) are not installed; automatic getnative and some denoise filters may be unavailable.
 
 ---
 

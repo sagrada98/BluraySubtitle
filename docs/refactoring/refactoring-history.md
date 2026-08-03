@@ -1102,3 +1102,34 @@ Commit: Included in this change
 ### Deferred
 
 - A PyInstaller macOS release package and CI build are not part of this change.
+
+## macOS Encode Enablement and vspipe Compatibility
+
+Date: 2026-08-03
+Commit: Included in this change
+
+### Scope
+
+- Enabled the default Encode pipeline on macOS by building every required VapourSynth plugin from source and fixed two vspipe flag incompatibilities with recent VapourSynth (R57+ / R77).
+
+### Logic Changes
+
+- `setup_macos_environment.sh` now builds and installs into `~/plugins` the plugins the default VPy requires: L-SMASH-Works (source reader, against a static `liblsmash.a` because macOS clang rejects the GNU `--version-script` used for the shared library), fmtconv (autotools with GNU libtool), nlm_ispc (CMake + ISPC), vs-placebo, EEDI2, rgvs (vs-removegrain) and descale. It also installs `mvsfunc`, `muvsfunc` and `numpy` into the VapourSynth Python environment (numpy via `--index-url https://pypi.org/simple` because the default index may miss the cp314 wheel). VapourSynth API v3 headers (`VapourSynth.h`, `VSHelper.h`) and a `vapoursynth/` header subdirectory are added to the Homebrew include tree for the older plugins.
+- `encode_and_audio_tasks.py` probes the configured vspipe once and uses `-c y4m` when the legacy `--y4m` flag is absent (VapourSynth R57+); older bundled vspipe builds keep `--y4m`. The probe result also drives the echoed Encode command lines.
+- `encode_source.py` probes the configured vspipe for `--preserve-cwd` and omits it when absent (R57+ always preserves the working directory).
+
+### Documentation and i18n
+
+- Both README versions now describe the full plugin build and no longer list Encode as limited; only `tsMuxeR`/`truehdd`/`vsedit` remain unavailable.
+
+### Automated Checks
+
+- macOS setup contract tests cover the plugin builds, `muvsfunc`/numpy steps, and the vspipe y4m flag fallback.
+
+### Remaining Manual Media Checks
+
+- A real Encode on this machine encoded a 30.5-second SP (1920×1080) through the complete service-layer `encode_task` with getnative resolution detection, HDR metadata auto-parameters (`--range full --chromaloc 0`), the default filter chain and x265 10-bit output; the resulting HEVC was decoded successfully. A full-length main-title Encode remains a manual regression input.
+
+### Deferred
+
+- Automatic getnative ranking, descale-dependent kernels and the optional assrender subtitle rendering were not exercised end-to-end.

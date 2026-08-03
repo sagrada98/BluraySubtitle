@@ -1082,3 +1082,34 @@ Blu-ray DIY 压制及“编辑轨道”中的通用视频转换仍不在本阶�
 ### 暂缓事项
 
 - PyInstaller macOS 发布包与 CI 构建不包含在本次修改中。
+
+## macOS 压制启用与 vspipe 兼容性
+
+日期：2026-08-03
+提交：包含在本次修改中
+
+### 范围
+
+- 通过从源码编译默认压制流程所需的全部 VapourSynth 插件，在 macOS 上启用默认 Encode，并修复了 vspipe 与新版 VapourSynth（R57+ / R77）的两个参数不兼容问题。
+
+### 逻辑变化
+
+- `setup_macos_environment.sh` 现在把默认 VPy 所需的插件编译并安装到 `~/plugins`：L-SMASH-Works（源读取器，链接静态 `liblsmash.a`，因为 macOS clang 不接受共享库使用的 GNU `--version-script`）、fmtconv（autotools + GNU libtool）、nlm_ispc（CMake + ISPC）、vs-placebo、EEDI2、rgvs（vs-removegrain）与 descale。同时在 VapourSynth Python 环境中安装 `mvsfunc`、`muvsfunc` 与 `numpy`（numpy 通过 `--index-url https://pypi.org/simple` 安装，因为默认索引可能缺少 cp314 wheel）。还向 Homebrew include 树补充了 VapourSynth API v3 头文件（`VapourSynth.h`、`VSHelper.h`）与 `vapoursynth/` 头文件子目录，供旧插件使用。
+- `encode_and_audio_tasks.py` 对配置的 vspipe 探测一次：当旧版 `--y4m` 参数缺失时改用 `-c y4m`（VapourSynth R57+）；旧版内置 vspipe 仍使用 `--y4m`。探测结果也用于回显 Encode 命令。
+- `encode_source.py` 探测配置的 vspipe 是否支持 `--preserve-cwd`，缺失时省略（R57+ 总是保留工作目录）。
+
+### 文档与 i18n
+
+- 中英文 README 均改述为完整的插件编译说明，不再把 Encode 列为受限；仅 `tsMuxeR`／`truehdd`／`vsedit` 仍不可用。
+
+### 自动化检查
+
+- macOS 配置契约测试覆盖插件编译、`muvsfunc`／numpy 步骤与 vspipe y4m 参数回退。
+
+### 遗留的手动媒体检查
+
+- 本机真实 Encode 通过完整服务层 `encode_task` 编码了一段 30.5 秒的 SP（1920×1080），包括 getnative 分辨率检测、HDR 元数据自动参数（`--range full --chromaloc 0`）、默认滤镜链与 x265 10-bit 输出；生成的 HEVC 成功解码。整片正片压制仍属于手动回归输入。
+
+### 暂缓事项
+
+- 自动 getnative 排序、descale 相关内核与可选的 assrender 字幕渲染未做端到端验证。

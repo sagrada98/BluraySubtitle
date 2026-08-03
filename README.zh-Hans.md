@@ -421,13 +421,13 @@ chmod +x setup_macos_environment.sh
 - 缺失时安装 **Xcode 命令行工具** 与 **Homebrew**。
 - 安装核心工具：mkvtoolnix、ffmpeg、flac、x264、x265、SvtAv1EncApp、fdkaac、VapourSynth、libass、mpv。
 - 使用 cargo 从官方上游源码构建 `hdr10plus_tool` 与 `dovi_tool`（Homebrew 未收录）。
+- 从源码编译默认 Encode 流程所需的 VapourSynth 插件（L-SMASH-Works、fmtconv、mvsfunc/muvsfunc、nlm_ispc、placebo、eedi2、rgvs、descale）到 `~/plugins`。
 - 创建虚拟环境并安装 Python 依赖包。
 - 按照 `src/core/settings.py` 中定义的 macOS 路径逐项校验所有工具。
 
 **macOS 限制**
 
 - `tsMuxeR`、`truehdd` 与 `vsedit` 没有 macOS 版本，需要它们的任务会报告明确错误。
-- 未安装 VapourSynth 插件（descale、VapourSynth 脚本），自动 getnative 与部分降噪滤镜可能不可用。
 
 ---
 
