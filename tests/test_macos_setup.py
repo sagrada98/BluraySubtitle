@@ -69,6 +69,22 @@ class MacOSSetupTests(unittest.TestCase):
     def test_script_builds_rust_tools(self) -> None:
         self.assertIn("cargo install hdr10plus_tool dovi_tool", self.script)
 
+    def test_script_builds_vapoursynth_plugins(self) -> None:
+        self.assertIn("libvslsmashsource", self.script)
+        self.assertIn("fmtconv", self.script)
+        self.assertIn("mvsfunc", self.script)
+        self.assertIn("muvsfunc", self.script)
+        self.assertIn("WolframRhodium", self.script)
+        self.assertIn("vapoursynth-descale", self.script)
+        self.assertIn("VapourSynth-EEDI2", self.script)
+        self.assertIn("vs-placebo", self.script)
+        self.assertIn("vs-nlm-ispc", self.script)
+        self.assertIn("vs-removegrain", self.script)
+        self.assertIn("PLUGIN_DIR", self.script)
+        self.assertIn("liblsmash.a", self.script)
+        self.assertIn("libtool", self.script)
+        self.assertIn("ispc", self.script)
+
     def test_script_installs_python_dependencies_in_venv(self) -> None:
         self.assertIn("-m venv", self.script)
         self.assertIn("PyQt6", self.script)
@@ -96,6 +112,14 @@ class MacOSSetupTests(unittest.TestCase):
     def test_vpy_editor_supports_darwin(self) -> None:
         self.assertIn("sys.platform == 'darwin'", self.vpy_preview)
         self.assertIn("run_command(['open', path], wait=False)", self.vpy_preview)
+
+    def test_vspipe_y4m_flag_compatibility(self) -> None:
+        """Newer vspipe (R57+) uses -c y4m instead of the legacy --y4m."""
+        from src.runtime.services_split.encode_and_audio_tasks import (
+            _vspipe_y4m_flags,
+        )
+
+        self.assertEqual(_vspipe_y4m_flags("/nonexistent/vspipe"), ("--y4m",))
 
     def test_readmes_synchronize_macos_support(self) -> None:
         for readme in (self.readme_en, self.readme_zh):
