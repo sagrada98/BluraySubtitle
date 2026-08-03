@@ -579,6 +579,38 @@ def probe_actual_encode_source(source_path: str) -> ActualEncodeSource:
     )
 
 
+_vspipe_cwd_flags_cache: dict[str, tuple[str, ...]] = {}
+
+
+def _vspipe_preserve_cwd_flags(vspipe_executable: str) -> tuple[str, ...]:
+    """Return the working-directory flag accepted by the configured vspipe.
+
+    VapourSynth R57 removed the legacy ``--preserve-cwd`` flag and always
+    preserves the current working directory; recent sources and Homebrew
+    reject the old flag as an unknown argument. Probe the actual binary once
+    per path and cache the result so older vspipe builds keep working.
+    """
+    key = str(vspipe_executable)
+    cached = _vspipe_cwd_flags_cache.get(key)
+    if cached is not None:
+        return cached
+    flags: tuple[str, ...] = ("--preserve-cwd",)
+    try:
+        probe = subprocess.run(
+            [key, "--help"],
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+        help_text = (probe.stdout or "") + (probe.stderr or "")
+        if "--preserve-cwd" not in help_text:
+            flags = ()
+    except Exception:
+        pass
+    _vspipe_cwd_flags_cache[key] = flags
+    return flags
+
+
 def probe_vapoursynth_output_metadata(
         source: ActualEncodeSource,
         vpy_path: str,
@@ -598,7 +630,7 @@ def probe_vapoursynth_output_metadata(
         probe_environment['BLURAYSUB_VPY_PROBE_SCRIPT'] = script_path
         probe_environment['BLURAYSUB_VPY_PROBE_RESULT'] = result_path
         result = run_command(
-            [vspipe_executable, '--preserve-cwd', '--info', wrapper_path],
+            [vspipe_executable, *_vspipe_preserve_cwd_flags(vspipe_executable), '--info', wrapper_path],
             cwd=os.path.dirname(script_path),
             env=probe_environment,
             capture_output=True,

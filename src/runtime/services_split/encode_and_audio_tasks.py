@@ -436,6 +436,38 @@ def _pump_subprocess_stderr_raw(stream) -> None:
             pass
 
 
+_vspipe_y4m_flags_cache: dict[str, tuple[str, ...]] = {}
+
+
+def _vspipe_y4m_flags(vspipe_exe: str) -> tuple[str, ...]:
+    """Return the y4m container flags accepted by the configured vspipe.
+
+    VapourSynth R57 renamed the legacy ``--y4m`` flag to ``-c y4m``; recent
+    sources and Homebrew ship R77+, where ``--y4m`` is an unknown argument.
+    Probe the actual binary once per path and cache the result so older
+    bundled vspipe builds keep working unchanged.
+    """
+    key = str(vspipe_exe)
+    cached = _vspipe_y4m_flags_cache.get(key)
+    if cached is not None:
+        return cached
+    flags = ("--y4m",)
+    try:
+        probe = subprocess.run(
+            [key, "--help"],
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+        help_text = (probe.stdout or "") + (probe.stderr or "")
+        if re.search(r"-c,\s+--container", help_text) and "--y4m" not in help_text:
+            flags = ("-c", "y4m")
+    except Exception:
+        pass
+    _vspipe_y4m_flags_cache[key] = flags
+    return flags
+
+
 def _run_vspipe_piped_encode(
     vspipe_exe: str,
     vpy_path: str,
@@ -461,7 +493,7 @@ def _run_vspipe_piped_encode(
     stderr_v = None if inherit_err else subprocess.PIPE
     stderr_e = None if use_encoder_stderr_inherit else subprocess.PIPE
 
-    vspipe_cmd = [str(vspipe_exe), "--y4m", str(vpy_path), "-"]
+    vspipe_cmd = [str(vspipe_exe), *_vspipe_y4m_flags(str(vspipe_exe)), str(vpy_path), "-"]
     enc_cmd = [str(x) for x in encoder_cmd]
 
     p_v = run_command(
@@ -527,7 +559,7 @@ def _run_vspipe_svt_win_tempfile_encode(
         prefix="bluraysub_svt_", suffix=".y4m", dir=td if td else None
     )
     os.close(fd)
-    vspipe_cmd = [str(vspipe_exe), "--y4m", str(vpy_path), "-"]
+    vspipe_cmd = [str(vspipe_exe), *_vspipe_y4m_flags(str(vspipe_exe)), str(vpy_path), "-"]
     enc_cmd = [str(x) for x in encoder_cmd]
     try:
         with open(y4m_path, "wb") as y4m_f:
@@ -1579,8 +1611,9 @@ class EncodeAudioTasksMixin(BluraySubtitleServiceBase):
                 and str(os.environ.get("BLURAYSUB_SVT_WIN_TEMP_Y4M", "") or "").strip() == "1"
             )
             if use_svt_win_temp_y4m:
+                y4m_args_echo = " ".join(_vspipe_y4m_flags(str(vspipe_exe)))
                 cmd_echo = (
-                    f'[temp y4m] "{vspipe_exe}" --y4m "{vpy_path}" -  -->  "{enc_cmd[0]}" -i <temp.y4m> ... -b "{encoded_path}"'
+                    f'[temp y4m] "{vspipe_exe}" {y4m_args_echo} "{vpy_path}" -  -->  "{enc_cmd[0]}" -i <temp.y4m> ... -b "{encoded_path}"'
                 )
                 try:
                     _emit_encode_log_line(
@@ -1589,7 +1622,8 @@ class EncodeAudioTasksMixin(BluraySubtitleServiceBase):
                 except Exception:
                     pass
             else:
-                cmd_echo = f'"{vspipe_exe}" --y4m "{vpy_path}" - | {_format_encoder_cmd_for_echo(enc_cmd)}'
+                y4m_args_echo = " ".join(_vspipe_y4m_flags(str(vspipe_exe)))
+                cmd_echo = f'"{vspipe_exe}" {y4m_args_echo} "{vpy_path}" - | {_format_encoder_cmd_for_echo(enc_cmd)}'
             print(f'{translate_text("Encode command:")}{cmd_echo}')
             failure_stage = 'Video encoding'
             if use_svt_win_temp_y4m:
