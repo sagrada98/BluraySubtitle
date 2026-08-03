@@ -882,11 +882,12 @@ class SettingsDialog(QDialog):
                 self.t("All configured tool paths in settings.py were found.")
             )
             return
-        setup_script = (
-            "setup_windows_environment.ps1"
-            if sys.platform == "win32"
-            else "setup_linux_environment.sh"
-        )
+        if sys.platform == "win32":
+            setup_script = "setup_windows_environment.ps1"
+        elif sys.platform == "darwin":
+            setup_script = "setup_macos_environment.sh"
+        else:
+            setup_script = "setup_linux_environment.sh"
         missing_lines = "\n".join(
             f"- {name}: {path}" for name, path in missing
         )

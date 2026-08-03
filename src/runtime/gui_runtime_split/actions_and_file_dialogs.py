@@ -3,6 +3,7 @@ import copy
 import datetime
 import os
 import re
+import shutil
 import sys
 import threading
 import time
@@ -1629,7 +1630,9 @@ class ActionsAndDialogsMixin(BluraySubtitleGuiBase):
             self.vspipe_mode_combo.setEnabled(False)
             self.x265_mode_combo.setCurrentText('System')
             self.x265_mode_combo.setEnabled(False)
-        elif is_docker():
+        elif is_docker() or sys.platform == 'darwin':
+            # The bundled VapourSynth package ships only with the Windows
+            # release, so macOS must always use system tools.
             self.vspipe_mode_combo.setCurrentText('System')
             self.x265_mode_combo.setCurrentText('System')
 
@@ -2182,6 +2185,15 @@ class ActionsAndDialogsMixin(BluraySubtitleGuiBase):
                     if mp4_exe_path.endswith('mpv.exe'):
                         mpv_play_mpls(mpls_path, mp4_exe_path)
                         return
+            if sys.platform == 'darwin':
+                # mpv (installed by setup_macos_environment.sh) plays Blu-ray
+                # playlists; fall back to the default macOS media player.
+                mpv_path = shutil.which('mpv')
+                if mpv_path:
+                    mpv_play_mpls(mpls_path, mpv_path)
+                    return
+                run_command(['open', mpls_path])
+                return
             os.startfile(mpls_path)
         else:
             in_docker = False

@@ -113,6 +113,31 @@ if sys.platform != "win32":
     MKV_PROP_EDIT_PATH = '/usr/bin/mkvpropedit'
     MKV_EXTRACT_PATH = '/usr/bin/mkvextract'
 
+# macOS tools are installed by setup_macos_environment.sh through Homebrew,
+# which lives under /opt/homebrew (Apple Silicon) or /usr/local (Intel).
+# Windows-only tools are left empty so consumers fall back to shutil.which()
+# and report them as unavailable when no macOS binary exists.
+if sys.platform == "darwin":
+    _HOMEBREW_PREFIX = "/opt/homebrew" if os.path.isdir("/opt/homebrew/bin") else "/usr/local"
+    FLAC_PATH = os.path.join(_HOMEBREW_PREFIX, "bin", "flac")
+    FFMPEG_PATH = os.path.join(_HOMEBREW_PREFIX, "bin", "ffmpeg")
+    FFPROBE_PATH = os.path.join(_HOMEBREW_PREFIX, "bin", "ffprobe")
+    X265_PATH = os.path.join(_HOMEBREW_PREFIX, "bin", "x265")
+    X264_PATH = os.path.join(_HOMEBREW_PREFIX, "bin", "x264")
+    SVT_AV1_PATH = os.path.join(_HOMEBREW_PREFIX, "bin", "SvtAv1EncApp")
+    FDK_AAC_PATH = os.path.join(_HOMEBREW_PREFIX, "bin", "fdkaac")
+    DOVI_TOOL_PATH = os.path.join(_HOMEBREW_PREFIX, "bin", "dovi_tool")
+    HDR10PLUS_TOOL_PATH = os.path.join(_HOMEBREW_PREFIX, "bin", "hdr10plus_tool")
+    VSPIPE_PATH = os.path.join(_HOMEBREW_PREFIX, "bin", "vspipe")
+    MKV_INFO_PATH = os.path.join(_HOMEBREW_PREFIX, "bin", "mkvinfo")
+    MKV_MERGE_PATH = os.path.join(_HOMEBREW_PREFIX, "bin", "mkvmerge")
+    MKV_PROP_EDIT_PATH = os.path.join(_HOMEBREW_PREFIX, "bin", "mkvpropedit")
+    MKV_EXTRACT_PATH = os.path.join(_HOMEBREW_PREFIX, "bin", "mkvextract")
+    TRUEHDD_PATH = ""
+    VSEDIT_PATH = ""
+    TS_MUXER_PATH = ""
+    # PLUGIN_PATH (Linux default ~/plugins) and LIBASS_PATH ('') remain valid.
+
 
 BDMV_LABELS = ["path", "size", "info", "remux_cmd"]
 DIY_BDMV_LABELS = ["path", "size", "info"]

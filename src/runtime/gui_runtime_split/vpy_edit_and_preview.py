@@ -786,6 +786,8 @@ class VpyEditPreviewMixin(BluraySubtitleGuiBase):
             return
         if sys.platform == 'win32':
             os.startfile(path)
+        elif sys.platform == 'darwin':
+            run_command(['open', path], wait=False)
         else:
             run_command(['xdg-open', path], wait=False)
 
