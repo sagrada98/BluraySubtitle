@@ -102,6 +102,7 @@ When the author establishes a new rule, update this file and its Simplified Chin
 - Unless a confirmed compatibility or other technical constraint requires otherwise, dependencies and bundled tools must use the latest version published by the official upstream. Do not pin a version or commit without such a constraint.
 - `Dockerfile` is the Ubuntu 26.04 adaptation of `setup_linux_environment.sh`. Do not add compatibility handling for other operating systems, explanatory output, or comments.
 - Linux setup must place managed executables and VapourSynth plugins at the Linux paths defined by `src/core/settings.py`. Docker must install them directly at the corresponding Docker paths in that file, within each tool's existing build section; do not add a final relocation layer.
+- macOS setup must place managed executables at the macOS paths defined by `src/core/settings.py` (Homebrew under `/opt/homebrew` on Apple Silicon or `/usr/local` on Intel). The bundled VapourSynth package ships only with the Windows release; macOS always uses system VapourSynth and encoders.
 - Modify existing software in its corresponding Dockerfile build section even when the required change invalidates later layers. Do not put an unrelated small change near the beginning of the file; add genuinely new software near the end whenever practical so earlier layers remain cached.
 
 ## 10. Confirmed Product Constraints

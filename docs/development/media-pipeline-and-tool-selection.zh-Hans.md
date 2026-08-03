@@ -8,7 +8,7 @@
 
 媒体处理流程需要满足以下要求：
 
-- 原生支持 Windows、Linux 和 Docker，不要求安装 Windows 兼容层；
+- 原生支持 Windows、Linux、macOS 和 Docker，不要求安装 Windows 兼容层；
 - 将 MPLS PlayItem 的顺序、`in_time` 和 `out_time` 视为权威播放时间线；
 - 保留 GUI 中选择的轨道、顺序、语言、章节范围和输出名称；
 - 能从真实原盘的制作异常和流检测问题中恢复，同时不能静默改变用户要求的输出；

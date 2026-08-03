@@ -18,7 +18,7 @@ Windows x64 下载：
   独立于 GitHub Release 的发布周期及时更新。
 - [GitHub Releases](https://github.com/Haruite/BluraySubtitle/releases)：随每个版本发布的归档包。
 
-BluraySubtitle 是一个面向 Windows/Linux（含 Docker）的蓝光流程 GUI 工具。  
+BluraySubtitle 是一个面向 Windows/Linux/macOS（含 Docker）的蓝光流程 GUI 工具。
 它将以下五类功能整合在一个应用中：
 
 1. **原盘 Remux**
@@ -35,7 +35,7 @@ BluraySubtitle 是一个面向 Windows/Linux（含 Docker）的蓝光流程 GUI 
 - 所有功能自动配置，不需要学习成本，懒人只需要点两下鼠标即可完成操作。
 - 软件操作自由度高，也适合高级用户。
 - 具备严谨的操作逻辑以及强大的纠错能力。
-- 跨平台：Windows / Linux / Docker。
+- 跨平台：Windows / Linux / macOS / Docker。
 
 ---
 
@@ -405,6 +405,32 @@ chmod +x setup_linux_environment.sh
 
 ---
 
+## setup_macos_environment.sh（macOS 环境配置脚本）
+
+`setup_macos_environment.sh` 通过 **Homebrew** 在 **macOS**（Apple Silicon 与 Intel）上安装运行环境。支持两种架构，建议使用 macOS 12 或更新版本。
+
+首次运行前先授予脚本执行权限，再从仓库根目录启动：
+
+```bash
+chmod +x setup_macos_environment.sh
+./setup_macos_environment.sh
+```
+
+脚本会执行以下操作：
+
+- 缺失时安装 **Xcode 命令行工具** 与 **Homebrew**。
+- 安装核心工具：mkvtoolnix、ffmpeg、flac、x264、x265、SvtAv1EncApp、fdkaac、VapourSynth、libass、mpv。
+- 使用 cargo 从官方上游源码构建 `hdr10plus_tool` 与 `dovi_tool`（Homebrew 未收录）。
+- 创建虚拟环境并安装 Python 依赖包。
+- 按照 `src/core/settings.py` 中定义的 macOS 路径逐项校验所有工具。
+
+**macOS 限制**
+
+- `tsMuxeR`、`truehdd` 与 `vsedit` 没有 macOS 版本，需要它们的任务会报告明确错误。
+- 未安装 VapourSynth 插件（descale、VapourSynth 脚本），自动 getnative 与部分降噪滤镜可能不可用。
+
+---
+
 ## Docker
 
 构建镜像：
@@ -434,7 +460,7 @@ sudo docker run -it --rm \
   bluray-subtitle-ubuntu
 ```
 
-Apple Silicon（amd64 容器）示例：
+Apple Silicon 上已提供原生 macOS 支持（通过 `setup_macos_environment.sh`）。Docker 仍可作为备选方案（amd64 容器）示例：
 
 ```bash
 docker build --platform linux/amd64 -t bluray-subtitle-ubuntu .
@@ -457,6 +483,8 @@ docker pull --platform linux/amd64 haruite/bluraysubtitle:latest
   - 检查 VPy 文件与插件可用性。
 - Docker/Linux 播放异常：
   - 检查 DISPLAY、音频转发、mpv 可用性。
+- macOS 播放异常：
+  - 蓝光播放列表由 mpv（`setup_macos_environment.sh` 已安装）播放；缺失时执行 `brew install mpv` 安装。
 
 ---
 

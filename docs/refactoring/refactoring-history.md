@@ -36,6 +36,7 @@ History entries must reflect the author's documented intent. Unresolved behavior
 | Phase 4 | Shared logic and execution boundaries | Complete | `c50f4e9` |
 | Phase 5 | Base contracts, i18n, naming, and algorithm notes | Complete | `b26803b` |
 | Phase 6 | Transport and subtitle parsers | Complete | `ef9ea71` |
+| macOS | Native macOS support and environment setup | Complete | This change |
 
 ## Phase 1 — Contract and Safety Baseline
 
@@ -1061,3 +1062,43 @@ Commit: Included in this change
 - Windows, Ubuntu 22.04, and Ubuntu 26.04 each rendered a generated 900p Bicubic default VPy frame using L-SMASH and placebo with no generated `try`/`except`, FFMS2, or neo_f3kdb path. Ubuntu 22.04 also rebuilt and loaded the formerly broken L-SMASH-Works plugin with no unresolved symbols.
 - The FLAC selector chose `/usr/local/bin/flac` 1.5.0 on Ubuntu 22.04 and correctly fell back to `/usr/bin/flac` 1.5.0 on Ubuntu 26.04. The installed Windows `libvs_placebo.dll` matched the extracted AmusementClub/tools file byte-for-byte (SHA-256 `A001EC26EFF87E5261E9438B9CBA0ADB176C2B6E210F7CBCD2E6D0F1A8F6F80E`) and evaluated the generated script's exact 16-bit Deband call successfully.
 - All 283 repository tests passed together with Python compilation, i18n, split-contract, PowerShell-parser, shell-syntax, diff, and line-ending checks. Windows additionally rendered all 16 getnative kernels and verified the field-based rejection path; the revised adaptive deband and anti-aliasing post-filter also produced a YUV420P16 smoke frame in the managed VapourSynth environment.
+
+## macOS Support
+
+Date: 2026-08-03
+Commit: Included in this change
+
+### Scope
+
+- Added macOS (Apple Silicon and Intel) as a supported platform with a Homebrew-based environment setup.
+
+### Redundant or Conflicting Paths Removed
+
+- The previous `sys.platform != "win32"` block in `src/core/settings.py` forced macOS onto Linux paths (`/usr/bin/*`, `/usr/local/bin/*`) that do not exist on macOS. macOS now receives a dedicated Homebrew path block.
+- Removed the macOS playback crash (`os.startfile` does not exist on macOS) and the macOS VPy-editor crash (`xdg-open` does not exist on macOS).
+
+### Logic Changes
+
+- `src/core/settings.py` selects `/opt/homebrew` (Apple Silicon) or `/usr/local` (Intel) and defines all tool paths under that prefix. Windows-only tools (`truehdd`, `vsedit`, `tsMuxeR`) are left empty so consumers fall back to `shutil.which()` and report them as unavailable.
+- `actions_and_file_dialogs.py` MPLS playback on macOS now uses mpv when available and otherwise opens the playlist with the default macOS player; `vspipe`/`x265` mode selection on macOS is forced to System because the bundled VapourSynth package ships only with the Windows release.
+- `vpy_edit_and_preview.py` opens VPy files with `open` on macOS instead of `xdg-open`.
+- `settings_dialog.py` points the missing-tools message at `setup_macos_environment.sh` on macOS.
+- Added `setup_macos_environment.sh`: installs Xcode Command Line Tools and Homebrew, core tools (mkvtoolnix, ffmpeg, flac, x264, x265, SvtAv1EncApp, fdkaac, VapourSynth, libass, mpv), builds `hdr10plus_tool`/`dovi_tool` with cargo, creates a venv for the Python packages, and verifies every tool against the macOS paths in `src/core/settings.py`.
+
+### Documentation and i18n
+
+- Synchronized both README versions (platform statement, new macOS setup section, Docker Apple Silicon note, macOS playback troubleshooting), both code-standard versions (macOS path placement rule), and both media-pipeline versions (design-goal platform statement).
+
+### Automated Checks
+
+- `tests/test_macos_setup.py` adds static contracts for the setup script (LF, shebang, Homebrew installs, cargo builds, venv creation), the `settings.py` Homebrew path block, the darwin branches in `settings_dialog.py` and the playback/VPy-editor code, and README synchronization.
+- All repository tests passed together with Python compilation, i18n and split-contract checks, and line-ending verification.
+
+### Remaining Manual Media Checks
+
+- Full Blu-ray media flows (Remux, Encode, merge subtitles, chapters) on an Apple Silicon Mac with real discs remain manual regression inputs.
+- `tsMuxeR`, `truehdd`, and `vsedit` have no macOS builds; tasks that require them report an explicit error. VapourSynth plugins (descale, VapourSynth scripts) are not installed by the macOS setup; automatic getnative and some denoise filters may be unavailable.
+
+### Deferred
+
+- A PyInstaller macOS release package and CI build are not part of this change.

@@ -11,8 +11,8 @@ on; it is not a general benchmark of every tool or version.
 
 The pipeline is designed around the following requirements:
 
-- support Windows, Linux, and Docker without requiring a Windows compatibility
-  layer;
+- support Windows, Linux, macOS, and Docker without requiring a Windows
+  compatibility layer;
 - treat MPLS play-item order and in/out times as the authoritative playback
   timeline;
 - preserve the tracks, order, languages, chapter ranges, and output names

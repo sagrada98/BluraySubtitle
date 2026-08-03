@@ -36,6 +36,7 @@ Phase 1 的详细分析仍保存在 [第一阶段重构契约与配置矩阵](ph
 | Phase 4 | 公共逻辑与执行边界 | 已完成 | `c50f4e9` |
 | Phase 5 | Base 契约、i18n、命名和算法注释 | 已完成 | `b26803b` |
 | Phase 6 | 传输流与字幕解析器 | 已完成 | `ef9ea71` |
+| macOS | 原生 macOS 支持与环境配置 | 已完成 | 本次修改 |
 
 ## Phase 1——契约与安全基线
 
@@ -1041,3 +1042,43 @@ Blu-ray DIY 压制及“编辑轨道”中的通用视频转换仍不在本阶�
 - Windows、Ubuntu 22.04、Ubuntu 26.04 均使用 L-SMASH 与 placebo 成功输出自动生成的 900p Bicubic 默认 VPy 帧；生成脚本中没有 `try`／`except`、FFMS2 或 neo_f3kdb 路径。Ubuntu 22.04 还重编并成功加载了原先损坏的 L-SMASH-Works 插件，已无未解析符号。
 - FLAC 选择器在 Ubuntu 22.04 选中 `/usr/local/bin/flac` 1.5.0，在 Ubuntu 26.04 正确回退到 `/usr/bin/flac` 1.5.0。Windows 已安装的 `libvs_placebo.dll` 与解压的 AmusementClub/tools 文件逐字节一致（SHA-256 `A001EC26EFF87E5261E9438B9CBA0ADB176C2B6E210F7CBCD2E6D0F1A8F6F80E`），并成功求值生成脚本使用的准确 16 位 Deband 调用。
 - 全仓库 283 项测试全部通过，Python 编译、i18n、split contract、PowerShell 解析、Shell 语法、差异和行尾检查也通过；Windows 还实际输出了全部 16 种 getnative 核并验证了场编码拒绝路径，修改后的自适应去色带与抗锯齿后处理也在受管理 VapourSynth 环境中成功输出 YUV420P16 冒烟帧。
+
+## macOS 支持
+
+日期：2026-08-03
+提交：包含在本次修改中
+
+### 范围
+
+- 将 macOS（Apple Silicon 与 Intel）新增为受支持平台，并提供基于 Homebrew 的环境配置脚本。
+
+### 移除的冗余或冲突路径
+
+- 原 `sys.platform != "win32"` 分支在 `src/core/settings.py` 中把 macOS 强制归入 Linux 路径（`/usr/bin/*`、`/usr/local/bin/*`），这些路径在 macOS 上不存在。macOS 现在使用独立的 Homebrew 路径块。
+- 修复了 macOS 播放崩溃（macOS 没有 `os.startfile`）和 macOS VPy 编辑器崩溃（macOS 没有 `xdg-open`）。
+
+### 逻辑变化
+
+- `src/core/settings.py` 选择 `/opt/homebrew`（Apple Silicon）或 `/usr/local`（Intel），并在该前缀下定义全部工具路径。仅限 Windows 的工具（`truehdd`、`vsedit`、`tsMuxeR`）置空，由消费方回退到 `shutil.which()` 并报告不可用。
+- `actions_and_file_dialogs.py` 在 macOS 上播放 MPLS 时优先使用 mpv，否则用 macOS 默认播放器打开；macOS 上的 `vspipe`／`x265` 模式强制使用 System，因为随附 VapourSynth 包只随 Windows 发布版分发。
+- `vpy_edit_and_preview.py` 在 macOS 上用 `open` 打开 VPy 文件，不再调用 `xdg-open`。
+- `settings_dialog.py` 在 macOS 上把缺工具提示指向 `setup_macos_environment.sh`。
+- 新增 `setup_macos_environment.sh`：安装 Xcode 命令行工具与 Homebrew、核心工具（mkvtoolnix、ffmpeg、flac、x264、x265、SvtAv1EncApp、fdkaac、VapourSynth、libass、mpv），用 cargo 构建 `hdr10plus_tool`／`dovi_tool`，创建 venv 安装 Python 依赖包，并按 `src/core/settings.py` 中的 macOS 路径逐项校验全部工具。
+
+### 文档与 i18n
+
+- 同步更新中英文 README（平台声明、新增 macOS 配置章节、Docker Apple Silicon 说明、macOS 播放排查）、双语代码规范（macOS 路径放置规则）与双语媒体管线文档（设计目标中的平台声明）。
+
+### 自动化检查
+
+- `tests/test_macos_setup.py` 新增静态契约测试：安装脚本（LF、shebang、Homebrew 安装项、cargo 构建、venv 创建）、`settings.py` 的 Homebrew 路径块、`settings_dialog.py` 与播放／VPy 编辑器代码中的 darwin 分支，以及 README 同步。
+- 全仓库测试全部通过，Python 编译、i18n、split contract 检查与行尾校验也通过。
+
+### 遗留的手动媒体检查
+
+- 在 Apple Silicon Mac 上使用真实光盘执行完整蓝光流程（Remux、压制、合并字幕、章节）仍属于手动回归输入。
+- `tsMuxeR`、`truehdd` 与 `vsedit` 没有 macOS 版本，需要它们的任务会报告明确错误。macOS 配置未安装 VapourSynth 插件（descale、VapourSynth 脚本），自动 getnative 与部分降噪滤镜可能不可用。
+
+### 暂缓事项
+
+- PyInstaller macOS 发布包与 CI 构建不包含在本次修改中。

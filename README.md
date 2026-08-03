@@ -20,7 +20,7 @@ Windows x64 downloads:
   kept current independently of the GitHub release schedule.
 - [GitHub Releases](https://github.com/Haruite/BluraySubtitle/releases): versioned packages published with each release.
 
-BluraySubtitle is a GUI tool for Blu-ray workflows on **Windows / Linux** (including **Docker**).  
+BluraySubtitle is a GUI tool for Blu-ray workflows on **Windows / Linux / macOS** (including **Docker**).
 It brings the following five areas of functionality together in one application:
 
 1. **Blu-ray Remux**
@@ -37,7 +37,7 @@ It brings the following five areas of functionality together in one application:
 - Features are **auto-configured**—low learning curve; casual users can finish tasks with just a couple of clicks.
 - The UI still offers **high freedom** for advanced users.
 - **Careful operation logic** and **strong error recovery**.
-- Cross-platform: **Windows / Linux / Docker**.
+- Cross-platform: **Windows / Linux / macOS / Docker**.
 
 ---
 
@@ -436,6 +436,32 @@ Prefer running `setup_linux_environment.sh` in a **remote terminal**: it uses **
 
 ---
 
+## `setup_macos_environment.sh` (macOS environment setup)
+
+`setup_macos_environment.sh` installs the runtime environment on **macOS** (Apple Silicon and Intel) through **Homebrew**. It supports macOS on both architectures; macOS 12 or newer is recommended.
+
+Make the script executable before the first run, then start it from the repository root:
+
+```bash
+chmod +x setup_macos_environment.sh
+./setup_macos_environment.sh
+```
+
+What it does:
+
+- Installs **Xcode Command Line Tools** and **Homebrew** when missing.
+- Installs core tools: mkvtoolnix, ffmpeg, flac, x264, x265, SvtAv1EncApp, fdkaac, VapourSynth, libass, mpv.
+- Builds `hdr10plus_tool` and `dovi_tool` from official upstream sources with cargo (not packaged by Homebrew).
+- Creates a virtual environment and installs the Python packages.
+- Verifies every tool against the macOS paths defined in `src/core/settings.py`.
+
+**macOS limitations**
+
+- `tsMuxeR`, `truehdd` and `vsedit` have no macOS builds. Tasks that require them report an explicit error.
+- VapourSynth plugins (descale, VapourSynth scripts) are not installed; automatic getnative and some denoise filters may be unavailable.
+
+---
+
 ## Docker
 
 Build image:
@@ -465,7 +491,7 @@ sudo docker run -it --rm \
   bluray-subtitle-ubuntu
 ```
 
-Apple Silicon (amd64 container):
+On Apple Silicon, native macOS support is available through `setup_macos_environment.sh`. Docker remains an alternative (amd64 container):
 
 ```bash
 docker build --platform linux/amd64 -t bluray-subtitle-ubuntu .
@@ -488,6 +514,8 @@ docker pull --platform linux/amd64 haruite/bluraysubtitle:latest
   - Check VPy file and plugins.
 - **Docker / Linux playback issues**  
   - Check `DISPLAY`, audio forwarding, and **mpv** availability.
+- **macOS playback**
+  - mpv (installed by `setup_macos_environment.sh`) plays Blu-ray playlists; install it with `brew install mpv` when missing.
 
 ---
 

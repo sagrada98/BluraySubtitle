@@ -102,6 +102,7 @@
 - 如果不存在已确认的兼容性问题或其他技术约束，依赖与随附工具必须使用官方上游发布的最新版本；没有此类约束时，不得固定版本或提交。
 - `Dockerfile` 是 `setup_linux_environment.sh` 面向 Ubuntu 26.04 的适配版，不需要考虑其他操作系统兼容性，也不需要增加说明性输出或注释。
 - Linux setup 必须把受管理的可执行文件和 VapourSynth 插件放到 `src/core/settings.py` 定义的 Linux 路径。Docker 必须在各工具原有构建段内直接安装到该文件中对应的 Docker 路径，不得增加末尾统一搬运层。
+- macOS setup 必须把受管理的可执行文件放到 `src/core/settings.py` 定义的 macOS 路径（Apple Silicon 上为 `/opt/homebrew`、Intel 上为 `/usr/local` 下的 Homebrew 路径）。随附的 VapourSynth 包只随 Windows 发布版分发；macOS 始终使用系统版 VapourSynth 与编码器。
 - 修改已有软件时，必须修改 Dockerfile 中对应的原有构建段，即使因此使后续层缓存失效也不得规避。不得把无关的小改动放到文件前部；确实新增的软件应在可行时尽量放到末尾，以保留前面构建层的缓存。
 
 ## 10. 已确认的产品约束
